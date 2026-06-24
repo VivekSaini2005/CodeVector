@@ -52,7 +52,7 @@ const PAGE_SIZE = 20;
 
 const getProducts = async (req, res) => {
     try {
-        const { category, cursor, snapshotTime,limit } = req.query;
+        const { category, cursor, snapshotTime, limit } = req.query;
 
         
         if (category && !ALLOWED_CATEGORIES.includes(category)) {
@@ -65,15 +65,19 @@ const getProducts = async (req, res) => {
         // First request creates snapshot time
         const snapshot = snapshotTime || new Date().toISOString();
 
-        const filter = {
+        const baseFilter = {
           updatedAt: {
             $lte: new Date(snapshot),
           },
         };
 
         if (category) {
-          filter.category = category;
+          baseFilter.category = category;
         }
+
+        const totalCount = await Product.countDocuments(baseFilter);
+
+        const filter = { ...baseFilter };
 
         // Cursor pagination
         if (cursor) {
@@ -96,9 +100,18 @@ const getProducts = async (req, res) => {
           ];
         }
 
-        let fetchLimit = limit > 0 && limit <= 100 ? limit : PAGE_SIZE;
+        let fetchLimit = Number.parseInt(limit, 10);
+        if (Number.isNaN(fetchLimit) || fetchLimit <= 0 || fetchLimit > 100) {
+          fetchLimit = PAGE_SIZE;
+        }
 
-        const products = await Product.find(filter).sort({updatedAt: -1,_id: -1,}).limit(fetchLimit).lean();
+        const productsWithExtra = await Product.find(filter)
+          .sort({ updatedAt: -1, _id: -1 })
+          .limit(fetchLimit + 1)
+          .lean();
+
+        const hasNextPage = productsWithExtra.length > fetchLimit;
+        const products = hasNextPage ? productsWithExtra.slice(0, fetchLimit) : productsWithExtra;
 
         let nextCursor = null;
 
@@ -115,8 +128,14 @@ const getProducts = async (req, res) => {
 
         res.status(200).json({
           success: true,
+          count: products.length,
+          totalCount,
           products,
           nextCursor,
+          pagination: {
+            nextCursor,
+            hasNextPage,
+          },
           snapshotTime: snapshot,
         });
     } 
