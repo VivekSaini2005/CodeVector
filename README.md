@@ -184,7 +184,6 @@ Create a `.env` file based on `.env.example`:
 ```ini
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/mern_db
-NODE_ENV=development
 ```
 
 ---
