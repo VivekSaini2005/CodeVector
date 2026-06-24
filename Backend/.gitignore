@@ -1,0 +1,15 @@
+# Dependency directories
+node_modules/
+
+# Local environment variables containing sensitive secrets
+.env
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor and OS files
+.DS_Store
+.vscode/
+.idea/
