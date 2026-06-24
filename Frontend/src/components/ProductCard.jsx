@@ -42,7 +42,7 @@ function ProductCard({ product }) {
               Price
             </span>
             <span className="mt-1 block font-medium text-slate-800">
-              {product?.price != null ? `$${product.price}` : 'Not available'}
+              {product?.price != null ? `₹${product.price}` : 'Not available'}
             </span>
           </div>
 
